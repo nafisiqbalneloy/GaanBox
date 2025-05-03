@@ -1,0 +1,90 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #0d1b2a;
+    color: #e0e1dd;
+    padding: 20px;
+}
+
+.container {
+    max-width: 700px;
+    margin: auto;
+    background-color: #1b263b;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+h1 {
+    text-align: center;
+    color: #f4f4f4;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #a0aec0;
+    margin-bottom: 30px;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #415a77;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #cbd5e1;
+}
+
+button {
+    width: 100%;
+    background-color: #778da9;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #a9bcd0;
+}
+
+.song {
+    background-color: #2c3e50;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
+    border-left: 5px solid #5dade2;
+}
+
+.song h3 {
+    margin: 0;
+    color: #ecf0f1;
+}
+
+.song span {
+    font-weight: normal;
+    color: #bdc3c7;
+}
+
+.song a {
+    color: #5dade2;
+    text-decoration: none;
+    display: inline-block;
+    margin: 5px 0;
+}
+
+.song p {
+    margin-top: 10px;
+    font-style: italic;
+    color: #d6e4f0;
+}

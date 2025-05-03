@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GaanBox 🎵</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🎶 GaanBox</h1>
+    <p class="subtitle">A place where people share their favorite songs with stories 💙</p>
+
+    <div class="song-form">
+      <input type="text" id="song-name" placeholder="Song Name" />
+      <input type="text" id="song-artist" placeholder="Artist Name" />
+      <input type="text" id="song-link" placeholder="YouTube/Spotify Link" />
+      <textarea id="song-story" rows="4" placeholder="What's the story behind this song?"></textarea>
+      <button onclick="submitSong()">Add Song</button>
+    </div>
+
+    <div class="song-list" id="song-list">
+      <!-- Songs will appear here -->
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
