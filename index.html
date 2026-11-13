@@ -4,15 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta name="description" content="GaanBox: share your favourite songs along with the story behind them."/>
+  <meta name="theme-color" content="#0b1220" />
   <title>GaanBox 🎵</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="container">
-    <h1>🎶 GaanBox</h1>
-    <p class="subtitle">A place where people share their favorite songs with stories 💙</p>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="logo" aria-hidden="true">🎶</div>
+      <h1>GaanBox</h1>
+      <p class="subtitle">Every song has a story. Share yours 💙</p>
+    </div>
+  </header>
 
-    <nav class="tabs" role="tablist">
+  <main class="container" id="main">
+
+    <nav class="tabs" role="tablist" aria-label="Sections">
       <button type="button" class="tab active" id="tab-btn-mine" role="tab" aria-selected="true">My collection</button>
       <button type="button" class="tab" id="tab-btn-community" role="tab" aria-selected="false">🌍 Community</button>
     </nav>
@@ -74,7 +82,9 @@
       <div class="song-list" id="c-list"></div>
       <button type="button" id="c-more" class="secondary" hidden>Load more</button>
     </section>
-  </div>
+  </main>
+
+  <footer class="site-footer">Made with 💙 · GaanBox</footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
