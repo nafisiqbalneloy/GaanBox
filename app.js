@@ -169,6 +169,10 @@ if (typeof document !== 'undefined') {
         class: 'link-btn', type: 'button', text: isOpen ? 'Hide player' : '▶ Play here',
         onclick: () => { isOpen ? expanded.delete(song.id) : expanded.add(song.id); render(); },
       }) : null,
+      el('button', {
+        class: 'link-btn', type: 'button', text: '🌍 Share',
+        onclick: () => (window.shareToCommunity ? window.shareToCommunity(song) : showToast('Community needs the GaanBox server.')),
+      }),
       el('button', { class: 'link-btn', type: 'button', text: 'Edit', onclick: () => startEdit(song.id) }),
       el('button', { class: 'link-btn danger', type: 'button', text: 'Delete', onclick: () => removeSong(song.id) })
     );
@@ -311,6 +315,8 @@ if (typeof document !== 'undefined') {
     if (e.target.files[0]) importSongs(e.target.files[0]);
     e.target.value = '';
   });
+
+  window.refreshMySongs = () => { songs = loadSongs(); render(); };
 
   songs = loadSongs();
   saveSongs(songs); // migrate songs from the first version to the new format

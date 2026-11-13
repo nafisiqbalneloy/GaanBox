@@ -1,0 +1,11 @@
+{
+  "name": "gaanbox",
+  "version": "2.0.0",
+  "description": "Share favourite songs with the story behind them",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test"
+  }
+}

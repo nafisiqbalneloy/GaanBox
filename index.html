@@ -12,6 +12,12 @@
     <h1>🎶 GaanBox</h1>
     <p class="subtitle">A place where people share their favorite songs with stories 💙</p>
 
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab active" id="tab-btn-mine" role="tab" aria-selected="true">My collection</button>
+      <button type="button" class="tab" id="tab-btn-community" role="tab" aria-selected="false">🌍 Community</button>
+    </nav>
+
+    <section id="tab-mine">
     <form class="song-form" id="song-form" novalidate>
       <h2 id="form-title">Add a song</h2>
       <input type="text" id="song-name" placeholder="Song Name" maxlength="100" required />
@@ -53,9 +59,25 @@
       <button type="button" id="export-btn" class="secondary small">⬇ Export</button>
       <label class="secondary small file-label">⬆ Import<input type="file" id="import-file" accept="application/json" hidden /></label>
     </div>
+    </section>
+
+    <section id="tab-community" hidden>
+      <p class="hint">Songs shared by everyone using this GaanBox. Share one from your collection with the “Share” button.</p>
+      <div class="toolbar">
+        <input type="search" id="c-search" placeholder="🔍 Search the community" aria-label="Search community" />
+        <select id="c-sort" aria-label="Sort community">
+          <option value="newest">Newest first</option>
+          <option value="popular">Most loved</option>
+        </select>
+      </div>
+      <p class="count" id="c-status"></p>
+      <div class="song-list" id="c-list"></div>
+      <button type="button" id="c-more" class="secondary" hidden>Load more</button>
+    </section>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
+  <script src="community.js"></script>
 </body>
 </html>

@@ -14,34 +14,64 @@ A small web app where people share their favourite songs **along with the story 
 - **Search** across songs, artists, stories and moods, and **sort** by newest, oldest, song or artist
 - **Export / import** your collection as a JSON file (backup or move to another browser)
 - Input validation, character counter, empty states and toast messages
-- Everything is saved in the browser with `localStorage`, so it survives refreshes. Songs saved by the first version are migrated automatically.
+- **Community**: share a song from your collection with everyone using the server, browse a shared feed, ♥ like, search, sort by newest or most loved, save a song to your own collection, report inappropriate songs, and remove your own shares
+- Your personal collection is saved in the browser with `localStorage`, so it survives refreshes. Songs saved by the first version are migrated automatically.
 - Safe rendering: user text is never injected as HTML, and links must be `http(s)`
 - Responsive layout, no build step and no dependencies
 
 ## 🚀 Run it
 
-Open `index.html` in your browser, or serve the folder:
+**Personal collection only:** open `index.html` in a browser. Everything is stored in your browser.
+
+**With the Community tab:** run the small Node.js server (Node 18+, **no dependencies to install**):
 
 ```bash
-python3 -m http.server 8000
-# then visit http://localhost:8000
+npm start
+# then visit http://localhost:3000
 ```
+
+Options (environment variables): `PORT` (default `3000`) and `DATA_FILE` (default `data/songs.json`).
+
+## 🧪 Tests
+
+```bash
+npm test
+```
+
+Covers validation, sharing/deleting, likes, search and pagination, reporting, rate limiting, oversized or invalid requests, and saving to disk.
+
+## 🔌 API
+
+| Method & path | Purpose |
+|---|---|
+| `GET /api/songs?q=&sort=newest\|popular&page=&pageSize=` | List shared songs (send `X-Client-Id` to get `likedByMe`) |
+| `POST /api/songs` | Share a song. Returns the song and a private `editToken` |
+| `DELETE /api/songs/:id` | Remove a song, requires the `X-Edit-Token` header |
+| `POST /api/songs/:id/like` | Toggle your like (requires `X-Client-Id`) |
+| `POST /api/songs/:id/report` | Report a song. Hidden after 3 different reports |
+| `GET /api/health` | Health check |
+
+How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, writes to the data file are atomic, only the four front-end files are served, and a Content Security Policy is sent with every page.
+
+There are no accounts: you own a shared song through a token kept in your browser. If you clear your browser data you can no longer remove your shares.
 
 ## 🗂️ Structure
 
 ```
-├── index.html   # Page layout, form, toolbar
-├── style.css    # Styling
-└── app.js       # Storage, rendering, search/sort, embeds, import/export
-```
-
-`app.js` keeps its logic (`getEmbedUrl`, `filterAndSort`, `normalizeSong`, `isValidUrl`) in plain functions, so they can be tested with Node:
-
-```bash
-node -e "const a=require('./app.js'); console.log(a.getEmbedUrl('https://youtu.be/dQw4w9WgXcQ'))"
+├── index.html        # Page layout: tabs, form, toolbar, community feed
+├── style.css         # Styling
+├── app.js            # My collection: storage, rendering, search/sort, embeds, import/export
+├── community.js      # Community tab: talks to the API
+├── server/
+│   ├── index.js      # HTTP server, routing, rate limiting, static files
+│   ├── store.js      # JSON-file storage
+│   └── validate.js   # Input validation
+├── test/api.test.js  # Node test runner
+└── package.json
 ```
 
 ## 🔭 Ideas for next steps
-- A backend and accounts so songs can be shared between people
-- Public "song of the day" page
-- Playlists and tags
+- Accounts and sign-in instead of browser-held tokens
+- Move storage from a JSON file to SQLite or PostgreSQL for larger traffic
+- Deploy it (for example on Render or Railway) so the Community tab is public
+- "Song of the day", comments, playlists and tags
