@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="GaanBox: share your favourite songs along with the story behind them."/>
   <title>GaanBox 🎵</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -11,19 +12,50 @@
     <h1>🎶 GaanBox</h1>
     <p class="subtitle">A place where people share their favorite songs with stories 💙</p>
 
-    <div class="song-form">
-      <input type="text" id="song-name" placeholder="Song Name" />
-      <input type="text" id="song-artist" placeholder="Artist Name" />
-      <input type="text" id="song-link" placeholder="YouTube/Spotify Link" />
-      <textarea id="song-story" rows="4" placeholder="What's the story behind this song?"></textarea>
-      <button onclick="submitSong()">Add Song</button>
+    <form class="song-form" id="song-form" novalidate>
+      <h2 id="form-title">Add a song</h2>
+      <input type="text" id="song-name" placeholder="Song Name" maxlength="100" required />
+      <input type="text" id="song-artist" placeholder="Artist Name" maxlength="100" required />
+      <input type="url" id="song-link" placeholder="YouTube / Spotify link" required />
+      <select id="song-mood" aria-label="Mood">
+        <option value="">Mood (optional)</option>
+        <option>😊 Happy</option>
+        <option>😢 Sad</option>
+        <option>🔥 Energetic</option>
+        <option>🌙 Calm</option>
+        <option>💘 Romantic</option>
+        <option>🧠 Nostalgic</option>
+      </select>
+      <textarea id="song-story" rows="4" maxlength="600" placeholder="What's the story behind this song?" required></textarea>
+      <div class="char-count"><span id="char-count">0</span>/600</div>
+      <p class="form-error" id="form-error" role="alert"></p>
+      <div class="form-buttons">
+        <button type="submit" id="submit-btn">Add Song</button>
+        <button type="button" id="cancel-edit" class="secondary" hidden>Cancel</button>
+      </div>
+    </form>
+
+    <div class="toolbar">
+      <input type="search" id="search" placeholder="🔍 Search songs, artists or stories" aria-label="Search" />
+      <select id="sort" aria-label="Sort">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="name">Song A–Z</option>
+        <option value="artist">Artist A–Z</option>
+      </select>
+      <button type="button" id="fav-filter" class="secondary small" aria-pressed="false">♥ Favorites</button>
     </div>
 
-    <div class="song-list" id="song-list">
-      <!-- Songs will appear here -->
+    <p class="count" id="count"></p>
+    <div class="song-list" id="song-list"></div>
+
+    <div class="footer-tools">
+      <button type="button" id="export-btn" class="secondary small">⬇ Export</button>
+      <label class="secondary small file-label">⬆ Import<input type="file" id="import-file" accept="application/json" hidden /></label>
     </div>
   </div>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
 </html>
