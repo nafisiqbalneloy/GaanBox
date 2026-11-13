@@ -2,7 +2,7 @@
 
 - [x] Backend with community feed, likes, reports and API tests
 - [x] 1. Design system: CSS variables, modern look, accessible focus states
-- [ ] 2. Light/dark theme toggle (respect `prefers-color-scheme`)
+- [x] 2. Light/dark theme toggle (respect `prefers-color-scheme`)
 - [ ] 3. Responsive mobile-first pass, sticky header, skeleton loaders, reduced-motion-safe animation
 - [ ] 4. Refactor front end into native ES modules (`src/`)
 - [ ] 5. Front-end unit tests for pure logic
