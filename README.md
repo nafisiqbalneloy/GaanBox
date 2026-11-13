@@ -18,6 +18,7 @@ A small web app where people share their favourite songs **along with the story 
 - Your personal collection is saved in the browser with `localStorage`, so it survives refreshes. Songs saved by the first version are migrated automatically.
 - Safe rendering: user text is never injected as HTML, and links must be `http(s)`
 - **Light / dark theme**: follows your system setting, with a toggle in the header that remembers your choice
+- Sticky tabs and shimmering skeleton cards while the community feed loads (animation respects `prefers-reduced-motion`)
 - Responsive layout, no build step and no dependencies
 
 ## 🚀 Run it

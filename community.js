@@ -69,10 +69,19 @@
     await loadPage();
   }
 
+  function showSkeletons(count = 3) {
+    const list = $('c-list');
+    list.setAttribute('aria-busy', 'true');
+    list.replaceChildren(...Array.from({ length: count }, () => el('div', { class: 'song skeleton', 'aria-hidden': 'true' },
+      el('div', { class: 'sk-line sk-title' }), el('div', { class: 'sk-line sk-sub' }),
+      el('div', { class: 'sk-line' }), el('div', { class: 'sk-line sk-short' }))));
+  }
+
   async function loadPage() {
     if (loading) return;
     loading = true;
     $('c-status').textContent = 'Loading…';
+    if (!loaded.length) showSkeletons();
     try {
       const params = new URLSearchParams({
         q: $('c-search').value, sort: $('c-sort').value, page: String(page), pageSize: String(PAGE_SIZE),
@@ -92,6 +101,7 @@
       $('c-more').hidden = true;
     } finally {
       loading = false;
+      $('c-list').removeAttribute('aria-busy');
     }
   }
 

@@ -190,6 +190,10 @@ a:hover { text-decoration: underline; }
 
 /* Tabs */
 .tabs {
+  position: sticky;
+  top: var(--space-2);
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
   display: flex;
   gap: var(--space-1);
   padding: var(--space-1);
@@ -356,6 +360,22 @@ button.link-btn.danger { color: var(--danger); }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* Skeleton loaders (shimmer is switched off by the reduced-motion rule below) */
+.skeleton { pointer-events: none; border-left-color: var(--border); }
+.skeleton:hover { transform: none; box-shadow: none; border-color: var(--border); }
+.sk-line {
+  height: 12px;
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface-2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.sk-title { width: 55%; height: 18px; }
+.sk-sub { width: 35%; }
+.sk-short { width: 70%; margin-bottom: 0; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
 /* ---------- 5. Utilities / responsive ---------- */
 @media (max-width: 560px) {
   .hero { padding-top: var(--space-6); }
@@ -363,6 +383,8 @@ button.link-btn.danger { color: var(--danger); }
   .song-form { padding: var(--space-4); }
   .song { padding: var(--space-4); }
   .toolbar select { flex: 1 1 100%; width: 100%; }
+  .theme-toggle { top: var(--space-3); right: var(--space-3); }
+  .footer-tools { flex-wrap: wrap; }
 }
 
 @media (prefers-reduced-motion: reduce) {
