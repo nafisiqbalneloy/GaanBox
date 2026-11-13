@@ -122,3 +122,12 @@ test('data persists to disk', async () => {
   const s2 = new Store(file);
   assert.equal(s2.list().total, 1);
 });
+
+test('serves theme-init.js so the saved theme can be restored under the CSP', async () => {
+  await withServer(async (call) => {
+    const res = await call('/theme-init.js');
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get('content-type'), /javascript/);
+    assert.match(await res.text(), /gaanbox-theme/);
+  });
+});
