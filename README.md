@@ -17,6 +17,7 @@ A small web app where people share their favourite songs **along with the story 
 - **Community**: share a song from your collection with everyone using the server, browse a shared feed, ♥ like, search, sort by newest or most loved, save a song to your own collection, report inappropriate songs, and remove your own shares
 - Your personal collection is saved in the browser with `localStorage`, so it survives refreshes. Songs saved by the first version are migrated automatically.
 - Safe rendering: user text is never injected as HTML, and links must be `http(s)`
+- **Light / dark theme**: follows your system setting, with a toggle in the header that remembers your choice
 - Responsive layout, no build step and no dependencies
 
 ## 🚀 Run it
@@ -59,7 +60,8 @@ There are no accounts: you own a shared song through a token kept in your browse
 
 ```
 ├── index.html        # Page layout: tabs, form, toolbar, community feed
-├── style.css         # Styling
+├── style.css         # Styling (design tokens, dark + light themes)
+├── theme.js          # Light/dark theme toggle
 ├── app.js            # My collection: storage, rendering, search/sort, embeds, import/export
 ├── community.js      # Community tab: talks to the API
 ├── server/

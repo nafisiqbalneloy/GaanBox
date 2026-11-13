@@ -9,7 +9,7 @@ const { validateSong } = require('./validate');
 const ROOT = path.join(__dirname, '..');
 const STATIC = {
   '/': 'index.html', '/index.html': 'index.html', '/style.css': 'style.css',
-  '/app.js': 'app.js', '/community.js': 'community.js',
+  '/app.js': 'app.js', '/theme.js': 'theme.js', '/community.js': 'community.js',
 };
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
