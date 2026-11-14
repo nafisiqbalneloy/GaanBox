@@ -1,5 +1,5 @@
 // Light/dark theme toggle. Honors a saved choice, else the system preference.
-(function () {
+export function initTheme() {
   var KEY = 'gaanbox-theme';
   var root = document.documentElement;
   var btn = document.getElementById('theme-toggle');
@@ -30,4 +30,4 @@
     mq.addEventListener('change', function () { if (!root.dataset.theme) render(); });
   }
   render();
-})();
+}

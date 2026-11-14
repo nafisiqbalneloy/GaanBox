@@ -131,3 +131,15 @@ test('serves theme-init.js so the saved theme can be restored under the CSP', as
     assert.match(await res.text(), /gaanbox-theme/);
   });
 });
+
+test('serves front-end ES modules from src/ and blocks anything else', async () => {
+  await withServer(async (call, base) => {
+    const ok = await fetch(base + '/src/main.js');
+    assert.equal(ok.status, 200);
+    assert.match(ok.headers.get('content-type'), /javascript/);
+    assert.equal((await fetch(base + '/src/missing.js')).status, 404);
+    assert.equal((await fetch(base + '/src/package.json')).status, 404);
+    assert.equal((await fetch(base + '/src/../server/store.js')).status, 404);
+    assert.equal((await fetch(base + '/server/store.js')).status, 404);
+  });
+});
