@@ -53,7 +53,7 @@ Covers validation, sharing/deleting, likes, search and pagination, reporting, ra
 | `POST /api/songs/:id/report` | Report a song. Hidden after 3 different reports |
 | `GET /api/health` | Health check |
 
-How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, writes to the data file are atomic, only the four front-end files are served, and a Content Security Policy is sent with every page.
+How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, writes to the data file are atomic, only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
 
 There are no accounts: you own a shared song through a token kept in your browser. If you clear your browser data you can no longer remove your shares.
 
@@ -62,9 +62,14 @@ There are no accounts: you own a shared song through a token kept in your browse
 ```
 ├── index.html        # Page layout: tabs, form, toolbar, community feed
 ├── style.css         # Styling (design tokens, dark + light themes)
-├── theme.js          # Light/dark theme toggle
-├── app.js            # My collection: storage, rendering, search/sort, embeds, import/export
-├── community.js      # Community tab: talks to the API
+├── theme-init.js     # Applies the saved theme before first paint (no flash)
+├── src/              # Front end as native ES modules (no build step)
+│   ├── main.js       # Entry point: wires the modules together
+│   ├── helpers.js    # Pure helpers (URL check, embeds, search/sort, normalize) + DOM builder
+│   ├── collection.js # My collection: storage, rendering, import/export
+│   ├── community.js  # Community tab: talks to the API
+│   ├── theme.js      # Light/dark theme toggle
+│   └── toast.js      # Toast messages
 ├── server/
 │   ├── index.js      # HTTP server, routing, rate limiting, static files
 │   ├── store.js      # JSON-file storage

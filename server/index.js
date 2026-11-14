@@ -9,8 +9,10 @@ const { validateSong } = require('./validate');
 const ROOT = path.join(__dirname, '..');
 const STATIC = {
   '/': 'index.html', '/index.html': 'index.html', '/style.css': 'style.css',
-  '/app.js': 'app.js', '/theme.js': 'theme.js', '/theme-init.js': 'theme-init.js', '/community.js': 'community.js',
+  '/theme-init.js': 'theme-init.js',
 };
+// Front-end ES modules live in src/ (flat folder, .js only, no path tricks).
+const MODULE_PATH = /^\/src\/[a-z-]+\.js$/i;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -131,9 +133,10 @@ function createServer({ store = new Store(), rateLimit = true } = {}) {
       const url = new URL(req.url, 'http://localhost');
       if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url);
 
-      const file = STATIC[url.pathname];
+      const file = STATIC[url.pathname] || (MODULE_PATH.test(url.pathname) ? url.pathname.slice(1) : null);
       if (!file || req.method !== 'GET') { res.writeHead(404); return res.end('Not found'); }
-      const body = await fs.promises.readFile(path.join(ROOT, file));
+      const body = await fs.promises.readFile(path.join(ROOT, file)).catch(() => null);
+      if (!body) { res.writeHead(404); return res.end('Not found'); }
       res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
       res.end(body);
     } catch (err) {

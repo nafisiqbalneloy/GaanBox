@@ -1,8 +1,9 @@
-'use strict';
+import { getEmbedUrl, el } from './helpers.js';
+import { showToast } from './toast.js';
 
-/* Community feed: talks to the GaanBox server (see server/index.js).
-   Relies on getEmbedUrl() and showToast() from app.js. */
-(function () {
+/* Community feed: talks to the GaanBox server (see server/index.js). */
+/** `onSavedToMine()` is called after a community song is copied into My collection. */
+export function initCommunity({ onSavedToMine } = {}) {
   const TOKENS_KEY = 'gaanbox_tokens';   // id -> edit token, for songs I shared
   const CLIENT_KEY = 'gaanbox_client';   // anonymous id used for likes/reports
   const AUTHOR_KEY = 'gaanbox_author';
@@ -34,18 +35,6 @@
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
     return data;
-  }
-
-  function el(tag, props = {}, ...children) {
-    const node = document.createElement(tag);
-    Object.entries(props).forEach(([k, v]) => {
-      if (k === 'class') node.className = v;
-      else if (k === 'text') node.textContent = v;
-      else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
-      else node.setAttribute(k, v);
-    });
-    children.forEach(c => c && node.appendChild(c));
-    return node;
   }
 
   /* ---------- tabs ---------- */
@@ -119,7 +108,7 @@
   function card(song) {
     const tokens = store.get(TOKENS_KEY, {});
     const mine = Boolean(tokens[song.id]);
-    const embed = typeof getEmbedUrl === 'function' ? getEmbedUrl(song.link) : null;
+    const embed = getEmbedUrl(song.link);
     const open = expanded.has(song.id);
 
     const likeBtn = el('button', {
@@ -203,11 +192,11 @@
     });
     store.set('songs', mine);
     showToast('Saved to your collection 💙');
-    if (typeof window.refreshMySongs === 'function') window.refreshMySongs();
+    if (onSavedToMine) onSavedToMine();
   }
 
   // Called by the "Share" button in My collection
-  window.shareToCommunity = async function (song) {
+  async function shareToCommunity(song) {
     let author = store.get(AUTHOR_KEY, '');
     if (!author) {
       author = (prompt('What name should we show with your song? (leave empty for Anonymous)') || '').trim();
@@ -225,7 +214,7 @@
     } catch (err) {
       showToast(location.protocol === 'file:' ? 'Run "npm start" to share songs.' : err.message);
     }
-  };
+  }
 
   /* ---------- wiring ---------- */
 
@@ -235,4 +224,6 @@
   $('c-more').addEventListener('click', () => { page += 1; loadPage(); });
   let timer;
   $('c-search').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 300); });
-})();
+
+  return { shareToCommunity };
+}
