@@ -40,7 +40,7 @@ Options (environment variables): `PORT` (default `3000`) and `DATA_FILE` (defaul
 npm test
 ```
 
-Covers validation, sharing/deleting, likes, search and pagination, reporting, rate limiting, oversized or invalid requests, and saving to disk.
+Covers validation, sharing/deleting, likes, search and pagination, reporting, rate limiting, oversized or invalid requests, and saving to disk. `test/helpers.test.js` unit-tests the front-end pure logic (URL validation, YouTube/Spotify embed URLs, search/sort/filter, song normalisation) by importing the ES modules from `src/` directly.
 
 ## 🔌 API
 
@@ -74,7 +74,8 @@ There are no accounts: you own a shared song through a token kept in your browse
 │   ├── index.js      # HTTP server, routing, rate limiting, static files
 │   ├── store.js      # JSON-file storage
 │   └── validate.js   # Input validation
-├── test/api.test.js  # Node test runner
+├── test/api.test.js      # API tests (Node test runner)
+├── test/helpers.test.js  # Front-end helper unit tests
 └── package.json
 ```
 
