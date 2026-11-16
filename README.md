@@ -57,11 +57,17 @@ How it stays safe: all input is validated and length-limited, only `http(s)` lin
 
 There are no accounts: you own a shared song through a token kept in your browser. If you clear your browser data you can no longer remove your shares.
 
+## 📲 Install & offline
+GaanBox is a PWA: use your browser's “Install app” / “Add to Home screen”. A service worker caches the app shell, so the page and **My collection** (stored in your browser) keep working offline. The Community tab needs a connection. API requests are never cached.
+
 ## 🗂️ Structure
 
 ```
 ├── index.html        # Page layout: tabs, form, toolbar, community feed
 ├── style.css         # Styling (design tokens, dark + light themes)
+├── manifest.webmanifest # PWA manifest (installable app)
+├── sw.js             # Service worker: offline app shell, never caches /api
+├── icons/            # App icons (SVG + PNG, incl. maskable)
 ├── theme-init.js     # Applies the saved theme before first paint (no flash)
 ├── src/              # Front end as native ES modules (no build step)
 │   ├── main.js       # Entry point: wires the modules together

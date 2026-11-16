@@ -143,3 +143,19 @@ test('serves front-end ES modules from src/ and blocks anything else', async () 
     assert.equal((await fetch(base + '/server/store.js')).status, 404);
   });
 });
+
+test('serves PWA manifest, service worker and icons', async () => {
+  await withServer(async (call) => {
+    const m = await call('/manifest.webmanifest');
+    assert.equal(m.status, 200);
+    assert.match(m.headers.get('content-type'), /manifest\+json/);
+    const manifest = await m.json();
+    assert.equal(manifest.display, 'standalone');
+    for (const icon of manifest.icons) assert.equal((await call(icon.src)).status, 200, icon.src);
+    const sw = await call('/sw.js');
+    assert.equal(sw.status, 200);
+    assert.match(sw.headers.get('content-type'), /javascript/);
+    assert.equal(sw.headers.get('cache-control'), 'no-cache');
+    assert.equal((await call('/icons/icon-512.png')).headers.get('content-type'), 'image/png');
+  });
+});

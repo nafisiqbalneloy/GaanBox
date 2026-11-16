@@ -9,13 +9,16 @@ const { validateSong } = require('./validate');
 const ROOT = path.join(__dirname, '..');
 const STATIC = {
   '/': 'index.html', '/index.html': 'index.html', '/style.css': 'style.css',
-  '/theme-init.js': 'theme-init.js',
+  '/theme-init.js': 'theme-init.js', '/sw.js': 'sw.js', '/manifest.webmanifest': 'manifest.webmanifest',
+  '/icons/icon.svg': 'icons/icon.svg', '/icons/icon-192.png': 'icons/icon-192.png',
+  '/icons/icon-512.png': 'icons/icon-512.png', '/icons/maskable-512.png': 'icons/maskable-512.png',
 };
 // Front-end ES modules live in src/ (flat folder, .js only, no path tricks).
 const MODULE_PATH = /^\/src\/[a-z-]+\.js$/i;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8',
+  '.svg': 'image/svg+xml', '.png': 'image/png',
 };
 const MAX_BODY = 10 * 1024;
 
@@ -137,7 +140,9 @@ function createServer({ store = new Store(), rateLimit = true } = {}) {
       if (!file || req.method !== 'GET') { res.writeHead(404); return res.end('Not found'); }
       const body = await fs.promises.readFile(path.join(ROOT, file)).catch(() => null);
       if (!body) { res.writeHead(404); return res.end('Not found'); }
-      res.writeHead(200, { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' });
+      const headers = { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' };
+      if (file === 'sw.js') headers['Cache-Control'] = 'no-cache'; // always re-check for a new worker
+      res.writeHead(200, headers);
       res.end(body);
     } catch (err) {
       const status = err.status || 500;

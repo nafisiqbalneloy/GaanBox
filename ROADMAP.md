@@ -6,7 +6,7 @@
 - [x] 3. Responsive mobile-first pass, sticky header, skeleton loaders, reduced-motion-safe animation
 - [x] 4. Refactor front end into native ES modules (`src/`)
 - [x] 5. Front-end unit tests for pure logic
-- [ ] 6. PWA: manifest, icons, service worker (offline "My collection")
+- [x] 6. PWA: manifest, icons, service worker (offline "My collection")
 - [ ] 7. SEO/social meta tags, favicon, 404 page
 - [ ] 8. SQLite storage via built-in `node:sqlite` (migrate from `songs.json`)
 - [ ] 9. Accounts: sign up / login (scrypt, signed session cookies)
