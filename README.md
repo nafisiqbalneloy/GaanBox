@@ -60,12 +60,17 @@ There are no accounts: you own a shared song through a token kept in your browse
 ## 📲 Install & offline
 GaanBox is a PWA: use your browser's “Install app” / “Add to Home screen”. A service worker caches the app shell, so the page and **My collection** (stored in your browser) keep working offline. The Community tab needs a connection. API requests are never cached.
 
+## 🔎 SEO & sharing
+Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/og-image.png`), a canonical link and `robots.txt` (the API is disallowed). Social tags need absolute URLs, so the server fills them in from the `PUBLIC_URL` environment variable (e.g. `PUBLIC_URL=https://gaanbox.example`), falling back to the request's `Host`. Unknown pages return a branded `404.html` with a real 404 status.
+
 ## 🗂️ Structure
 
 ```
 ├── index.html        # Page layout: tabs, form, toolbar, community feed
 ├── style.css         # Styling (design tokens, dark + light themes)
 ├── manifest.webmanifest # PWA manifest (installable app)
+├── 404.html             # branded not-found page
+├── robots.txt           # crawler rules
 ├── sw.js             # Service worker: offline app shell, never caches /api
 ├── icons/            # App icons (SVG + PNG, incl. maskable)
 ├── theme-init.js     # Applies the saved theme before first paint (no flash)

@@ -159,3 +159,31 @@ test('serves PWA manifest, service worker and icons', async () => {
     assert.equal((await call('/icons/icon-512.png')).headers.get('content-type'), 'image/png');
   });
 });
+
+test('unknown pages get a branded 404, API paths stay JSON', async () => {
+  await withServer(async (call, base) => {
+    const page = await call('/nope');
+    assert.equal(page.status, 404);
+    assert.match(page.headers.get('content-type'), /text\/html/);
+    assert.match(await page.text(), /isn't in the box/);
+    const api = await call('/api/nope');
+    assert.equal(api.status, 404);
+    assert.deepEqual(await api.json(), { error: 'Not found' });
+    const post = await fetch(base + '/nope', { method: 'POST' });
+    assert.equal(post.status, 404);
+  });
+});
+
+test('social meta tags use an absolute origin and robots.txt blocks the API', async () => {
+  await withServer(async (call, base) => {
+    const html = await (await call('/')).text();
+    assert.ok(html.includes(`<meta property="og:image" content="${base}/icons/og-image.png" />`));
+    assert.ok(!html.includes('__ORIGIN__'));
+    const robots = await call('/robots.txt');
+    assert.equal(robots.status, 200);
+    assert.match(await robots.text(), /Disallow: \/api\//);
+    const img = await call('/icons/og-image.png');
+    assert.equal(img.status, 200);
+    assert.equal(img.headers.get('content-type'), 'image/png');
+  });
+});
