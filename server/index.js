@@ -11,15 +11,17 @@ const STATIC = {
   '/': 'index.html', '/index.html': 'index.html', '/style.css': 'style.css',
   '/theme-init.js': 'theme-init.js', '/sw.js': 'sw.js', '/manifest.webmanifest': 'manifest.webmanifest',
   '/icons/icon.svg': 'icons/icon.svg', '/icons/icon-192.png': 'icons/icon-192.png',
-  '/icons/icon-512.png': 'icons/icon-512.png', '/icons/maskable-512.png': 'icons/maskable-512.png',
+  '/icons/icon-512.png': 'icons/icon-512.png', '/icons/og-image.png': 'icons/og-image.png',
+  '/robots.txt': 'robots.txt', '/icons/maskable-512.png': 'icons/maskable-512.png',
 };
 // Front-end ES modules live in src/ (flat folder, .js only, no path tricks).
 const MODULE_PATH = /^\/src\/[a-z-]+\.js$/i;
 const TYPES = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8',
-  '.svg': 'image/svg+xml', '.png': 'image/png',
+  '.svg': 'image/svg+xml', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8',
 };
+const HOST_RE = /^[a-z0-9.-]+(:\d{1,5})?$/i;
 const MAX_BODY = 10 * 1024;
 
 function createRateLimiter(limit, windowMs) {
@@ -62,6 +64,14 @@ function send(res, status, body) {
     'Cache-Control': 'no-store',
   });
   res.end(payload);
+}
+
+// Absolute origin for social tags: PUBLIC_URL if configured, else the (validated) Host header.
+function originOf(req) {
+  const configured = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
+  if (/^https?:\/\/[a-z0-9.:-]+$/i.test(configured)) return configured;
+  const host = String(req.headers.host || '');
+  return `http://${HOST_RE.test(host) ? host : 'localhost'}`;
 }
 
 function createServer({ store = new Store(), rateLimit = true } = {}) {
@@ -137,9 +147,15 @@ function createServer({ store = new Store(), rateLimit = true } = {}) {
       if (url.pathname.startsWith('/api/')) return await handleApi(req, res, url);
 
       const file = STATIC[url.pathname] || (MODULE_PATH.test(url.pathname) ? url.pathname.slice(1) : null);
-      if (!file || req.method !== 'GET') { res.writeHead(404); return res.end('Not found'); }
-      const body = await fs.promises.readFile(path.join(ROOT, file)).catch(() => null);
-      if (!body) { res.writeHead(404); return res.end('Not found'); }
+      const notFound = async () => {
+        const page = req.method === 'GET' ? await fs.promises.readFile(path.join(ROOT, '404.html')).catch(() => null) : null;
+        res.writeHead(404, { 'Content-Type': page ? TYPES['.html'] : 'text/plain; charset=utf-8' });
+        res.end(page || 'Not found');
+      };
+      if (!file || req.method !== 'GET') return await notFound();
+      let body = await fs.promises.readFile(path.join(ROOT, file)).catch(() => null);
+      if (!body) return await notFound();
+      if (file === 'index.html' || file === 'robots.txt') body = body.toString().replaceAll('__ORIGIN__', originOf(req));
       const headers = { 'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream' };
       if (file === 'sw.js') headers['Cache-Control'] = 'no-cache'; // always re-check for a new worker
       res.writeHead(200, headers);

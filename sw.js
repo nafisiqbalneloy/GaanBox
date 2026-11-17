@@ -1,7 +1,7 @@
 'use strict';
 // GaanBox service worker: precaches the app shell so "My collection" works offline.
 // API calls are never cached. Bump VERSION when shell files change.
-const VERSION = 'gaanbox-v1';
+const VERSION = 'gaanbox-v2';
 const SHELL = [
   '/', '/style.css', '/theme-init.js', '/manifest.webmanifest', '/icons/icon.svg',
   '/src/main.js', '/src/helpers.js', '/src/collection.js', '/src/community.js',

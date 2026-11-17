@@ -390,3 +390,9 @@ button.link-btn.danger { color: var(--danger); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* ---------- 404 page ---------- */
+.not-found-text { text-align: center; color: var(--text-muted); margin: var(--space-6) 0 var(--space-4); }
+.not-found-link { display: block; width: fit-content; margin: 0 auto; padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-weight: 600; text-decoration: none; }
+.not-found-link:hover { background: var(--primary-strong); }
+.not-found-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
