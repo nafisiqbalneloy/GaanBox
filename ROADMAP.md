@@ -8,7 +8,7 @@
 - [x] 5. Front-end unit tests for pure logic
 - [x] 6. PWA: manifest, icons, service worker (offline "My collection")
 - [x] 7. SEO/social meta tags, favicon, 404 page
-- [ ] 8. SQLite storage via built-in `node:sqlite` (migrate from `songs.json`)
+- [x] 8. SQLite storage via built-in `node:sqlite` (migrate from `songs.json`)
 - [ ] 9. Accounts: sign up / login (scrypt, signed session cookies)
 - [ ] 10. Playlists, tags/genres, comments, Song of the day
 - [ ] 11. CI (GitHub Actions), Dockerfile, deployment guide, security pass
