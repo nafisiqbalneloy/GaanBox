@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "description": "Share favourite songs with the story behind them",
   "private": true,
-  "engines": { "node": ">=18" },
+  "engines": { "node": ">=22.5" },
   "scripts": {
     "start": "node server/index.js",
     "test": "node --test"

@@ -170,8 +170,15 @@ function createServer({ store = new Store(), rateLimit = true } = {}) {
 
 if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
-  const dataFile = process.env.DATA_FILE || path.join(ROOT, 'data', 'songs.json');
-  createServer({ store: new Store(dataFile) }).listen(port, () => {
+  let dataFile = process.env.DATA_FILE || path.join(ROOT, 'data', 'gaanbox.db');
+  let legacyJson = path.join(path.dirname(dataFile), 'songs.json');
+  if (dataFile.endsWith('.json')) { // old-style DATA_FILE: import it into a SQLite file beside it
+    legacyJson = dataFile;
+    dataFile = dataFile.replace(/\.json$/, '.db');
+  }
+  const store = new Store(dataFile, { legacyJson });
+  if (store.imported) console.log(`Imported ${store.imported} songs from ${legacyJson} into ${dataFile}`);
+  createServer({ store }).listen(port, () => {
     console.log(`GaanBox running at http://localhost:${port}`);
   });
 }

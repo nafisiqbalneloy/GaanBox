@@ -25,14 +25,14 @@ A small web app where people share their favourite songs **along with the story 
 
 **Personal collection only:** open `index.html` in a browser. Everything is stored in your browser.
 
-**With the Community tab:** run the small Node.js server (Node 18+, **no dependencies to install**):
+**With the Community tab:** run the small Node.js server (Node 22.5+, **no dependencies to install**; storage uses the built-in `node:sqlite`):
 
 ```bash
 npm start
 # then visit http://localhost:3000
 ```
 
-Options (environment variables): `PORT` (default `3000`) and `DATA_FILE` (default `data/songs.json`).
+Options (environment variables): `PORT` (default `3000`) and `DATA_FILE` (default `data/gaanbox.db`, a SQLite database). If a `songs.json` from an older version sits next to the database it is imported automatically on first start and left in place as a backup.
 
 ## 🧪 Tests
 
@@ -53,7 +53,7 @@ Covers validation, sharing/deleting, likes, search and pagination, reporting, ra
 | `POST /api/songs/:id/report` | Report a song. Hidden after 3 different reports |
 | `GET /api/health` | Health check |
 
-How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, writes to the data file are atomic, only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
+How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, data is stored in SQLite (WAL mode, foreign keys, transactional import), only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
 
 There are no accounts: you own a shared song through a token kept in your browser. If you clear your browser data you can no longer remove your shares.
 
@@ -83,7 +83,7 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 │   └── toast.js      # Toast messages
 ├── server/
 │   ├── index.js      # HTTP server, routing, rate limiting, static files
-│   ├── store.js      # JSON-file storage
+│   ├── store.js      # SQLite storage (node:sqlite) + legacy JSON import
 │   └── validate.js   # Input validation
 ├── test/api.test.js      # API tests (Node test runner)
 ├── test/helpers.test.js  # Front-end helper unit tests
@@ -92,6 +92,5 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 
 ## 🔭 Ideas for next steps
 - Accounts and sign-in instead of browser-held tokens
-- Move storage from a JSON file to SQLite or PostgreSQL for larger traffic
 - Deploy it (for example on Render or Railway) so the Community tab is public
 - "Song of the day", comments, playlists and tags

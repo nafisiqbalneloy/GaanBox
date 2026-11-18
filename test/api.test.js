@@ -112,15 +112,49 @@ test('rate limit, bad JSON, oversized body and unknown routes', async () => {
   });
 });
 
-test('data persists to disk', async () => {
+test('data persists to disk (SQLite)', async () => {
   const fs = require('node:fs');
   const os = require('node:os');
   const path = require('node:path');
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'gaanbox-')), 'songs.json');
+  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'gaanbox-')), 'gaanbox.db');
   const s1 = new Store(file);
-  await s1.create({ name: 'X', artist: 'Y', link: 'https://a.b', story: 's', mood: '', author: 'me' });
+  const { song } = await s1.create({ name: 'X', artist: 'Y', link: 'https://a.b', story: 's', mood: '', author: 'me' });
+  await s1.toggleLike(song.id, 'client-1');
+  s1.close();
   const s2 = new Store(file);
-  assert.equal(s2.list().total, 1);
+  const res = s2.list({ clientId: 'client-1' });
+  assert.equal(res.total, 1);
+  assert.equal(res.items[0].likes, 1);
+  assert.equal(res.items[0].likedByMe, true);
+  s2.close();
+});
+
+test('imports a legacy songs.json once', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const crypto = require('node:crypto');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gaanbox-'));
+  const json = path.join(dir, 'songs.json');
+  const h = s => crypto.createHash('sha256').update(s).digest('hex');
+  fs.writeFileSync(json, JSON.stringify([
+    { id: 'a1', name: 'Old song', artist: 'Band', link: 'https://a.b', story: 'story', mood: 'calm',
+      author: 'me', createdAt: 1000, likes: [h('c1'), h('c2')], reports: [], tokenHash: h('tok') },
+    { id: 'a2', name: 'Hidden', artist: 'Band', link: 'https://a.b', story: 'story', mood: '',
+      author: 'me', createdAt: 2000, likes: [], reports: [h('1'), h('2'), h('3')], tokenHash: h('tok2') },
+  ]));
+  const db = path.join(dir, 'gaanbox.db');
+  const s1 = new Store(db, { legacyJson: json });
+  assert.equal(s1.imported, 2);
+  const res = s1.list();
+  assert.equal(res.total, 1); // the heavily reported song stays hidden
+  assert.equal(res.items[0].likes, 2);
+  assert.equal(await s1.remove('a1', 'tok'), 'ok'); // old edit token still works
+  s1.close();
+  const s2 = new Store(db, { legacyJson: json }); // second start must not re-import
+  assert.equal(s2.imported, 0);
+  assert.equal(s2.list().total, 0);
+  s2.close();
 });
 
 test('serves theme-init.js so the saved theme can be restored under the CSP', async () => {
