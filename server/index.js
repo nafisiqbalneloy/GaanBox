@@ -5,6 +5,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Store } = require('./store');
 const { validateSong } = require('./validate');
+const auth = require('./auth');
+const crypto = require('node:crypto');
 
 const ROOT = path.join(__dirname, '..');
 const STATIC = {
@@ -74,7 +76,12 @@ function originOf(req) {
   return `http://${HOST_RE.test(host) ? host : 'localhost'}`;
 }
 
-function createServer({ store = new Store(), rateLimit = true } = {}) {
+function createServer({ store = new Store(), rateLimit = true, sessionSecret = process.env.SESSION_SECRET } = {}) {
+  if (!sessionSecret) {
+    sessionSecret = crypto.randomBytes(32).toString('hex');
+    if (require.main === module) console.warn('SESSION_SECRET not set: sessions will reset on every restart');
+  }
+  const limitAuth = createRateLimiter(rateLimit ? 10 : Infinity, 60_000);
   const limitPosts = createRateLimiter(rateLimit ? 10 : Infinity, 60_000);
   const limitActions = createRateLimiter(rateLimit ? 60 : Infinity, 60_000);
 
@@ -87,12 +94,46 @@ function createServer({ store = new Store(), rateLimit = true } = {}) {
     ].join('; '),
   };
 
+  const secure = req => req.headers['x-forwarded-proto'] === 'https';
+  const sendWithCookie = (res, status, body, cookie) => {
+    res.setHeader('Set-Cookie', cookie);
+    send(res, status, body);
+  };
+  const currentUser = req => {
+    const s = auth.readSession(sessionSecret, auth.parseCookies(req.headers.cookie)[auth.COOKIE]);
+    return s ? store.findUserById(s.userId) : null;
+  };
+
+  async function handleAuth(req, res, action, ip) {
+    if (action === 'me' && req.method === 'GET') {
+      const user = currentUser(req);
+      return user ? send(res, 200, { user }) : send(res, 401, { error: 'Not signed in' });
+    }
+    if (action === 'logout' && req.method === 'POST') return sendWithCookie(res, 200, { ok: true }, auth.clearCookie());
+    if ((action !== 'signup' && action !== 'login') || req.method !== 'POST') return send(res, 404, { error: 'Not found' });
+    if (!limitAuth(ip)) return send(res, 429, { error: 'Too many attempts, try again in a minute' });
+    const { value, error } = auth.validateCredentials(await readJson(req));
+    if (action === 'signup') {
+      if (error) return send(res, 400, { error });
+      const user = store.createUser(value.username, auth.hashPassword(value.password));
+      if (!user) return send(res, 409, { error: 'That username is taken' });
+      return sendWithCookie(res, 201, { user }, auth.sessionCookie(auth.createSession(sessionSecret, user.id), { secure: secure(req) }));
+    }
+    const row = !error && store.findUserByName(value.username);
+    // Always run scrypt so unknown users and wrong passwords look the same (message and timing).
+    const ok = auth.verifyPassword(value ? value.password : '', row ? row.password_hash : auth.hashPassword('x')) && !!row;
+    if (!ok) return send(res, 401, { error: 'Wrong username or password' });
+    return sendWithCookie(res, 200, { user: store.findUserById(row.id) },
+      auth.sessionCookie(auth.createSession(sessionSecret, row.id), { secure: secure(req) }));
+  }
+
   async function handleApi(req, res, url) {
     const ip = req.socket.remoteAddress || 'unknown';
     const clientId = String(req.headers['x-client-id'] || '').slice(0, 64);
     const parts = url.pathname.split('/').filter(Boolean); // ['api','songs',id,action]
 
     if (parts[1] === 'health' && req.method === 'GET') return send(res, 200, { ok: true });
+    if (parts[1] === 'auth') return handleAuth(req, res, parts[2], ip);
     if (parts[1] !== 'songs') return send(res, 404, { error: 'Not found' });
 
     const id = parts[2];

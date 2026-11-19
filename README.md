@@ -32,7 +32,7 @@ npm start
 # then visit http://localhost:3000
 ```
 
-Options (environment variables): `PORT` (default `3000`) and `DATA_FILE` (default `data/gaanbox.db`, a SQLite database). If a `songs.json` from an older version sits next to the database it is imported automatically on first start and left in place as a backup.
+Options (environment variables): `PORT` (default `3000`), `SESSION_SECRET` (signs login cookies; set it to a long random string in production, otherwise sessions reset on each restart) and `DATA_FILE` (default `data/gaanbox.db`, a SQLite database). If a `songs.json` from an older version sits next to the database it is imported automatically on first start and left in place as a backup.
 
 ## 🧪 Tests
 
@@ -51,6 +51,10 @@ Covers validation, sharing/deleting, likes, search and pagination, reporting, ra
 | `DELETE /api/songs/:id` | Remove a song, requires the `X-Edit-Token` header |
 | `POST /api/songs/:id/like` | Toggle your like (requires `X-Client-Id`) |
 | `POST /api/songs/:id/report` | Report a song. Hidden after 3 different reports |
+| `POST /api/auth/signup` | Create an account (`{username, password}`), signs you in via an HttpOnly cookie |
+| `POST /api/auth/login` | Sign in |
+| `POST /api/auth/logout` | Sign out |
+| `GET /api/auth/me` | Current user, or 401 |
 | `GET /api/health` | Health check |
 
 How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, data is stored in SQLite (WAL mode, foreign keys, transactional import), only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
@@ -83,6 +87,7 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 │   └── toast.js      # Toast messages
 ├── server/
 │   ├── index.js      # HTTP server, routing, rate limiting, static files
+│   ├── auth.js       # scrypt password hashing + signed session cookies
 │   ├── store.js      # SQLite storage (node:sqlite) + legacy JSON import
 │   └── validate.js   # Input validation
 ├── test/api.test.js      # API tests (Node test runner)
