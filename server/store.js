@@ -30,6 +30,13 @@ const SCHEMA = `
     client_hash TEXT NOT NULL,
     PRIMARY KEY (song_id, client_hash)
   );
+  CREATE TABLE IF NOT EXISTS users (
+    id TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users(username COLLATE NOCASE);
   CREATE INDEX IF NOT EXISTS songs_created_idx ON songs(created_at);
 `;
 
@@ -163,6 +170,28 @@ class Store {
     if (!this._visibleRow(id)) return false;
     this.db.prepare('INSERT OR IGNORE INTO reports (song_id, client_hash) VALUES (?, ?)').run(id, sha256(clientId));
     return true;
+  }
+
+  // Returns the new user, or null when the username is taken (case-insensitive).
+  createUser(username, passwordHash) {
+    const user = { id: crypto.randomUUID(), username, createdAt: Date.now() };
+    try {
+      this.db.prepare('INSERT INTO users (id, username, password_hash, created_at) VALUES (?,?,?,?)')
+        .run(user.id, username, passwordHash, user.createdAt);
+    } catch (err) {
+      if (/UNIQUE/i.test(err.message)) return null;
+      throw err;
+    }
+    return user;
+  }
+
+  findUserByName(username) {
+    return this.db.prepare('SELECT * FROM users WHERE username = ? COLLATE NOCASE').get(username) || null;
+  }
+
+  findUserById(id) {
+    const r = this.db.prepare('SELECT id, username, created_at FROM users WHERE id = ?').get(id);
+    return r ? { id: r.id, username: r.username, createdAt: r.created_at } : null;
   }
 
   close() {

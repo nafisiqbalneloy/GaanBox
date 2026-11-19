@@ -221,3 +221,54 @@ test('social meta tags use an absolute origin and robots.txt blocks the API', as
     assert.equal(img.headers.get('content-type'), 'image/png');
   });
 });
+
+test('accounts: sign up, me, log out, log in', async () => {
+  await withServer(async call => {
+    const bad = await call('/api/auth/signup', { method: 'POST', body: { username: 'ab', password: 'longenough' } });
+    assert.equal(bad.status, 400);
+    assert.equal((await call('/api/auth/signup', { method: 'POST', body: { username: 'neloy', password: 'short' } })).status, 400);
+
+    const res = await call('/api/auth/signup', { method: 'POST', body: { username: 'Neloy', password: 'correct horse' } });
+    assert.equal(res.status, 201);
+    const setCookie = res.headers.get('set-cookie');
+    assert.match(setCookie, /HttpOnly/);
+    assert.match(setCookie, /SameSite=Lax/);
+    const body = await res.json();
+    assert.equal(body.user.username, 'Neloy');
+    assert.equal(JSON.stringify(body).includes('password'), false);
+    const cookie = setCookie.split(';')[0];
+
+    const me = await call('/api/auth/me', { headers: { Cookie: cookie } });
+    assert.equal(me.status, 200);
+    assert.equal((await me.json()).user.username, 'Neloy');
+    assert.equal((await call('/api/auth/me')).status, 401);
+    assert.equal((await call('/api/auth/me', { headers: { Cookie: cookie.slice(0, -2) + 'xx' } })).status, 401);
+
+    const dup = await call('/api/auth/signup', { method: 'POST', body: { username: 'NELOY', password: 'another pass' } });
+    assert.equal(dup.status, 409);
+
+    const wrong = await call('/api/auth/login', { method: 'POST', body: { username: 'neloy', password: 'nope nope nope' } });
+    const unknown = await call('/api/auth/login', { method: 'POST', body: { username: 'ghost', password: 'nope nope nope' } });
+    assert.equal(wrong.status, 401);
+    assert.equal(unknown.status, 401);
+    assert.deepEqual(await wrong.json(), await unknown.json());
+
+    const login = await call('/api/auth/login', { method: 'POST', body: { username: 'neloy', password: 'correct horse' } });
+    assert.equal(login.status, 200);
+    assert.ok(login.headers.get('set-cookie').startsWith('gb_session='));
+
+    const out = await call('/api/auth/logout', { method: 'POST' });
+    assert.match(out.headers.get('set-cookie'), /Max-Age=0/);
+  });
+});
+
+test('session tokens expire and reject tampering', () => {
+  const auth = require('../server/auth');
+  const t = auth.createSession('secret', 'u1', 1000);
+  assert.deepEqual(auth.readSession('secret', t, 2000), { userId: 'u1' });
+  assert.equal(auth.readSession('other', t, 2000), null);
+  assert.equal(auth.readSession('secret', t, 1000 + auth.SESSION_TTL_MS + 1), null);
+  assert.equal(auth.readSession('secret', 'garbage'), null);
+  assert.ok(auth.verifyPassword('pw-12345', auth.hashPassword('pw-12345')));
+  assert.equal(auth.verifyPassword('pw-12346', auth.hashPassword('pw-12345')), false);
+});
