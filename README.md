@@ -15,6 +15,7 @@ A small web app where people share their favourite songs **along with the story 
 - **Export / import** your collection as a JSON file (backup or move to another browser)
 - Input validation, character counter, empty states and toast messages
 - **Community**: share a song from your collection with everyone using the server, browse a shared feed, ♥ like, search, sort by newest or most loved, save a song to your own collection, report inappropriate songs, and remove your own shares
+- **Accounts (optional)**: sign up / log in from the header. Songs you share while signed in are posted under your username and linked to your account, so you can remove them from any browser or device
 - Your personal collection is saved in the browser with `localStorage`, so it survives refreshes. Songs saved by the first version are migrated automatically.
 - Safe rendering: user text is never injected as HTML, and links must be `http(s)`
 - **Light / dark theme**: follows your system setting, with a toggle in the header that remembers your choice
@@ -59,7 +60,7 @@ Covers validation, sharing/deleting, likes, search and pagination, reporting, ra
 
 How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, data is stored in SQLite (WAL mode, foreign keys, transactional import), only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
 
-There are no accounts: you own a shared song through a token kept in your browser. If you clear your browser data you can no longer remove your shares.
+Accounts are optional. Without one you own a shared song through a token kept in your browser (if you clear your browser data you can no longer remove it). Songs shared while signed in are linked to your account and can be removed by you from anywhere; the API then reports `ownedByMe` for your songs.
 
 ## 📲 Install & offline
 GaanBox is a PWA: use your browser's “Install app” / “Add to Home screen”. A service worker caches the app shell, so the page and **My collection** (stored in your browser) keep working offline. The Community tab needs a connection. API requests are never cached.
@@ -83,6 +84,7 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 │   ├── helpers.js    # Pure helpers (URL check, embeds, search/sort, normalize) + DOM builder
 │   ├── collection.js # My collection: storage, rendering, import/export
 │   ├── community.js  # Community tab: talks to the API
+│   ├── account.js    # Sign up / log in dialog and header account bar
 │   ├── theme.js      # Light/dark theme toggle
 │   └── toast.js      # Toast messages
 ├── server/

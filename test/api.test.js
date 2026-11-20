@@ -272,3 +272,55 @@ test('session tokens expire and reject tampering', () => {
   assert.ok(auth.verifyPassword('pw-12345', auth.hashPassword('pw-12345')));
   assert.equal(auth.verifyPassword('pw-12346', auth.hashPassword('pw-12345')), false);
 });
+
+test('songs shared while signed in belong to the account', async () => {
+  await withServer(async call => {
+    const signup = async name => {
+      const r = await call('/api/auth/signup', { method: 'POST', body: { username: name, password: 'correct horse' } });
+      return r.headers.get('set-cookie').split(';')[0];
+    };
+    const alice = await signup('alice');
+    const bob = await signup('bob');
+
+    const posted = await call('/api/songs', { method: 'POST', headers: { Cookie: alice }, body: song({ author: 'Spoofed' }) });
+    assert.equal(posted.status, 201);
+    const { song: shared, editToken } = await posted.json();
+    assert.equal(shared.author, 'alice', 'author comes from the account, not the request');
+    assert.equal(shared.ownedByMe, true);
+
+    const asAlice = await (await call('/api/songs', { headers: { Cookie: alice } })).json();
+    const asBob = await (await call('/api/songs', { headers: { Cookie: bob } })).json();
+    const anon = await (await call('/api/songs')).json();
+    assert.equal(asAlice.items[0].ownedByMe, true);
+    assert.equal(asBob.items[0].ownedByMe, false);
+    assert.equal(anon.items[0].ownedByMe, false);
+
+    // Bob and anonymous visitors cannot delete it; Alice can without the edit token.
+    assert.equal((await call(`/api/songs/${shared.id}`, { method: 'DELETE', headers: { Cookie: bob } })).status, 403);
+    assert.equal((await call(`/api/songs/${shared.id}`, { method: 'DELETE' })).status, 403);
+    assert.equal((await call(`/api/songs/${shared.id}`, { method: 'DELETE', headers: { Cookie: alice } })).status, 200);
+
+    // The edit token still works on its own (e.g. after logging in on another device is not required).
+    const again = await (await call('/api/songs', { method: 'POST', headers: { Cookie: alice }, body: song() })).json();
+    assert.equal((await call(`/api/songs/${again.song.id}`, { method: 'DELETE', headers: { 'X-Edit-Token': again.editToken } })).status, 200);
+    assert.ok(editToken);
+  });
+});
+
+test('existing databases gain the user_id column', () => {
+  const { DatabaseSync } = require('node:sqlite');
+  const os = require('node:os');
+  const path = require('node:path');
+  const fs = require('node:fs');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gb-mig-'));
+  const file = path.join(dir, 'old.db');
+  const old = new DatabaseSync(file);
+  old.exec(`CREATE TABLE songs (id TEXT PRIMARY KEY, name TEXT NOT NULL, artist TEXT NOT NULL, link TEXT NOT NULL,
+    story TEXT NOT NULL, mood TEXT NOT NULL DEFAULT '', author TEXT NOT NULL, created_at INTEGER NOT NULL, token_hash TEXT NOT NULL);
+    INSERT INTO songs VALUES ('1','n','a','https://x.y','s','','me',1,'h');`);
+  old.close();
+  const store = new Store(file);
+  assert.equal(store.list().items[0].ownedByMe, false);
+  store.close();
+  fs.rmSync(dir, { recursive: true, force: true });
+});

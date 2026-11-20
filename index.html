@@ -29,6 +29,7 @@
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="hero">
+    <div class="account-bar" id="account-bar"></div>
     <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch theme" title="Switch theme"></button>
     <div class="hero-inner">
       <div class="logo" aria-hidden="true">🎶</div>
@@ -102,6 +103,23 @@
       <button type="button" id="c-more" class="secondary" hidden>Load more</button>
     </section>
   </main>
+
+  <dialog id="auth-dialog" class="auth-dialog" aria-labelledby="auth-title">
+    <form id="auth-form" method="dialog" novalidate>
+      <h2 id="auth-title">Welcome back</h2>
+      <label for="auth-username">Username</label>
+      <input type="text" id="auth-username" autocomplete="username" maxlength="24" autocapitalize="none" spellcheck="false" />
+      <label for="auth-password">Password</label>
+      <input type="password" id="auth-password" autocomplete="current-password" maxlength="200" />
+      <p class="hint" id="auth-hint"></p>
+      <p class="form-error" id="auth-error" role="alert"></p>
+      <div class="form-buttons">
+        <button type="submit" id="auth-submit">Log in</button>
+        <button type="button" id="auth-cancel" class="secondary">Cancel</button>
+      </div>
+      <button type="button" id="auth-switch" class="link-btn">Create an account</button>
+    </form>
+  </dialog>
 
   <footer class="site-footer">Made with 💙 · GaanBox</footer>
 
