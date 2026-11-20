@@ -144,7 +144,7 @@ function createServer({ store = new Store(), rateLimit = true, sessionSecret = p
       const q = url.searchParams;
       return send(res, 200, store.list({
         q: (q.get('q') || '').slice(0, 100), sort: q.get('sort') || 'newest',
-        page: q.get('page'), pageSize: q.get('pageSize'), clientId,
+        page: q.get('page'), pageSize: q.get('pageSize'), clientId, userId: (currentUser(req) || {}).id,
       }));
     }
 
@@ -153,14 +153,17 @@ function createServer({ store = new Store(), rateLimit = true, sessionSecret = p
       if (!limitPosts(ip)) return send(res, 429, { error: 'Too many songs shared, try again in a minute' });
       const { value, error } = validateSong(await readJson(req));
       if (error) return send(res, 400, { error });
-      return send(res, 201, await store.create(value));
+      // Signed-in users post under their username and own the song through their account.
+      const user = currentUser(req);
+      if (user) value.author = user.username;
+      return send(res, 201, await store.create(value, user ? user.id : null));
     }
 
     if (!id) return send(res, 405, { error: 'Method not allowed' });
 
     // DELETE /api/songs/:id
     if (!action && req.method === 'DELETE') {
-      const result = await store.remove(id, String(req.headers['x-edit-token'] || ''));
+      const result = await store.remove(id, String(req.headers['x-edit-token'] || ''), (currentUser(req) || {}).id);
       if (result === 'not_found') return send(res, 404, { error: 'Song not found' });
       if (result === 'forbidden') return send(res, 403, { error: 'You can only delete songs you shared' });
       return send(res, 200, { ok: true });
@@ -171,7 +174,7 @@ function createServer({ store = new Store(), rateLimit = true, sessionSecret = p
       if (!clientId) return send(res, 400, { error: 'X-Client-Id header required' });
       if (!limitActions(ip)) return send(res, 429, { error: 'Slow down a little' });
       if (action === 'like') {
-        const song = await store.toggleLike(id, clientId);
+        const song = await store.toggleLike(id, clientId, (currentUser(req) || {}).id);
         return song ? send(res, 200, song) : send(res, 404, { error: 'Song not found' });
       }
       return (await store.report(id, clientId))

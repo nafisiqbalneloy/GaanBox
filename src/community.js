@@ -3,7 +3,7 @@ import { showToast } from './toast.js';
 
 /* Community feed: talks to the GaanBox server (see server/index.js). */
 /** `onSavedToMine()` is called after a community song is copied into My collection. */
-export function initCommunity({ onSavedToMine } = {}) {
+export function initCommunity({ onSavedToMine, getUser = () => null } = {}) {
   const TOKENS_KEY = 'gaanbox_tokens';   // id -> edit token, for songs I shared
   const CLIENT_KEY = 'gaanbox_client';   // anonymous id used for likes/reports
   const AUTHOR_KEY = 'gaanbox_author';
@@ -107,7 +107,7 @@ export function initCommunity({ onSavedToMine } = {}) {
 
   function card(song) {
     const tokens = store.get(TOKENS_KEY, {});
-    const mine = Boolean(tokens[song.id]);
+    const mine = Boolean(tokens[song.id]) || Boolean(song.ownedByMe);
     const embed = getEmbedUrl(song.link);
     const open = expanded.has(song.id);
 
@@ -170,7 +170,7 @@ export function initCommunity({ onSavedToMine } = {}) {
     const tokens = store.get(TOKENS_KEY, {});
     if (!confirm('Remove this song from the community? It stays in your collection.')) return;
     try {
-      await api(`/api/songs/${song.id}`, { method: 'DELETE', headers: { 'X-Edit-Token': tokens[song.id] } });
+      await api(`/api/songs/${song.id}`, { method: 'DELETE', headers: tokens[song.id] ? { 'X-Edit-Token': tokens[song.id] } : {} });
       delete tokens[song.id];
       store.set(TOKENS_KEY, tokens);
       loaded = loaded.filter(s => s.id !== song.id);
@@ -198,7 +198,7 @@ export function initCommunity({ onSavedToMine } = {}) {
   // Called by the "Share" button in My collection
   async function shareToCommunity(song) {
     let author = store.get(AUTHOR_KEY, '');
-    if (!author) {
+    if (!author && !getUser()) {
       author = (prompt('What name should we show with your song? (leave empty for Anonymous)') || '').trim();
       if (author) store.set(AUTHOR_KEY, author);
     }
@@ -225,5 +225,5 @@ export function initCommunity({ onSavedToMine } = {}) {
   let timer;
   $('c-search').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(reload, 300); });
 
-  return { shareToCommunity };
+  return { shareToCommunity, reload: () => { if (!$('tab-community').hidden) reload(); } };
 }

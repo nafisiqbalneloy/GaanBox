@@ -9,9 +9,9 @@
 - [x] 6. PWA: manifest, icons, service worker (offline "My collection")
 - [x] 7. SEO/social meta tags, favicon, 404 page
 - [x] 8. SQLite storage via built-in `node:sqlite` (migrate from `songs.json`)
-- [ ] 9. Accounts: sign up / login (scrypt, signed session cookies)
+- [x] 9. Accounts: sign up / login (scrypt, signed session cookies)
   - [x] Accounts API: users table, scrypt, signed cookies, tests (#13)
-  - [ ] Sign-up / login UI and linking shared songs to accounts
+  - [x] Sign-up / login UI and linking shared songs to accounts (#15)
 - [ ] 10. Playlists, tags/genres, comments, Song of the day
 - [ ] 11. CI (GitHub Actions), Dockerfile, deployment guide, security pass
 - [ ] 12. Framework migration to React + Vite + TypeScript (needs `npm install` to work)

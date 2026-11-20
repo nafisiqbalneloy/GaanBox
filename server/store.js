@@ -53,8 +53,16 @@ class Store {
     this.db = new DatabaseSync(file || ':memory:');
     this.db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
     this.db.exec(SCHEMA);
+    this._migrate();
     this.imported = 0;
     if (legacyJson) this.imported = this._importLegacy(legacyJson);
+  }
+
+  // Songs shared while signed in remember their owner (user_id); older rows stay token-only.
+  _migrate() {
+    const cols = this.db.prepare('PRAGMA table_info(songs)').all().map(c => c.name);
+    if (!cols.includes('user_id')) this.db.exec('ALTER TABLE songs ADD COLUMN user_id TEXT REFERENCES users(id) ON DELETE SET NULL');
+    this.db.exec('CREATE INDEX IF NOT EXISTS songs_user_idx ON songs(user_id)');
   }
 
   _importLegacy(jsonFile) {
@@ -98,28 +106,31 @@ class Store {
     }
   }
 
-  _public(row, clientId) {
+  _public(row, clientId, userId = '') {
     const likedByMe = clientId
       ? !!this.db.prepare('SELECT 1 FROM likes WHERE song_id = ? AND client_hash = ?').get(row.id, sha256(clientId))
       : false;
     return {
       id: row.id, name: row.name, artist: row.artist, link: row.link, story: row.story,
       mood: row.mood, author: row.author, createdAt: row.created_at,
-      likes: row.likes, likedByMe,
+      likes: row.likes, likedByMe, ownedByMe: !!userId && row.user_id === userId,
     };
   }
 
-  async create(fields) {
+  async create(fields, userId = null) {
     const editToken = crypto.randomBytes(16).toString('hex');
     const id = crypto.randomUUID();
     const createdAt = Date.now();
-    this.db.prepare(`INSERT INTO songs (id, name, artist, link, story, mood, author, created_at, token_hash)
-      VALUES (?,?,?,?,?,?,?,?,?)`).run(id, fields.name, fields.artist, fields.link, fields.story,
-      fields.mood || '', fields.author, createdAt, sha256(editToken));
-    return { song: this._public({ id, ...fields, mood: fields.mood || '', created_at: createdAt, likes: 0 }), editToken };
+    this.db.prepare(`INSERT INTO songs (id, name, artist, link, story, mood, author, created_at, token_hash, user_id)
+      VALUES (?,?,?,?,?,?,?,?,?,?)`).run(id, fields.name, fields.artist, fields.link, fields.story,
+      fields.mood || '', fields.author, createdAt, sha256(editToken), userId);
+    return {
+      song: this._public({ id, ...fields, mood: fields.mood || '', created_at: createdAt, likes: 0, user_id: userId }, '', userId || ''),
+      editToken,
+    };
   }
 
-  list({ q = '', sort = 'newest', page = 1, pageSize = 20, clientId = '' } = {}) {
+  list({ q = '', sort = 'newest', page = 1, pageSize = 20, clientId = '', userId = '' } = {}) {
     const query = q.trim().toLowerCase();
     const size = Math.min(Math.max(Number(pageSize) || 20, 1), 50);
     const current = Math.max(Number(page) || 1, 1);
@@ -139,7 +150,7 @@ class Store {
     const total = this.db.prepare(`SELECT COUNT(*) AS n FROM songs s WHERE ${clause}`).get(...params).n;
     const rows = this.db.prepare(`SELECT s.*, ${LIKES} AS likes FROM songs s WHERE ${clause}
       ORDER BY ${order} LIMIT ? OFFSET ?`).all(...params, size, (current - 1) * size);
-    return { items: rows.map(r => this._public(r, clientId)), total, page: current, pageSize: size };
+    return { items: rows.map(r => this._public(r, clientId, userId)), total, page: current, pageSize: size };
   }
 
   _visibleRow(id) {
@@ -150,20 +161,22 @@ class Store {
     return this._visibleRow(id);
   }
 
-  async remove(id, editToken) {
-    const row = this.db.prepare('SELECT token_hash FROM songs WHERE id = ?').get(id);
+  // Allowed with the song's edit token, or when signed in as the account that shared it.
+  async remove(id, editToken, userId = '') {
+    const row = this.db.prepare('SELECT token_hash, user_id FROM songs WHERE id = ?').get(id);
     if (!row) return 'not_found';
-    if (!editToken || sha256(editToken) !== row.token_hash) return 'forbidden';
+    const byOwner = !!userId && row.user_id === userId;
+    if (!byOwner && (!editToken || sha256(editToken) !== row.token_hash)) return 'forbidden';
     this.db.prepare('DELETE FROM songs WHERE id = ?').run(id);
     return 'ok';
   }
 
-  async toggleLike(id, clientId) {
+  async toggleLike(id, clientId, userId = '') {
     if (!this._visibleRow(id)) return null;
     const h = sha256(clientId);
     const removed = this.db.prepare('DELETE FROM likes WHERE song_id = ? AND client_hash = ?').run(id, h);
     if (!removed.changes) this.db.prepare('INSERT INTO likes (song_id, client_hash) VALUES (?, ?)').run(id, h);
-    return this._public(this._visibleRow(id), clientId);
+    return this._public(this._visibleRow(id), clientId, userId);
   }
 
   async report(id, clientId) {
