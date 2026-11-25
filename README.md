@@ -98,7 +98,11 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 └── package.json
 ```
 
+## 🚀 Deploy and contribute
+- Deployment guide (environment variables, Docker, HTTPS, backups): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
+- Want to help? See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.md)
+- CI runs the tests on every push and pull request
+
 ## 🔭 Ideas for next steps
-- Accounts and sign-in instead of browser-held tokens
 - Deploy it (for example on Render or Railway) so the Community tab is public
-- A "Song of the day" card in the UI (the API endpoint already exists), comments, playlists and tags
+- Comments, playlists and tags
