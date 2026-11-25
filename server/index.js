@@ -139,6 +139,12 @@ function createServer({ store = new Store(), rateLimit = true, sessionSecret = p
     const id = parts[2];
     const action = parts[3];
 
+    // GET /api/songs/of-the-day
+    if (id === 'of-the-day' && !action && req.method === 'GET') {
+      const song = store.songOfTheDay(new Date(), clientId, (currentUser(req) || {}).id);
+      return song ? send(res, 200, song) : send(res, 404, { error: 'No songs yet' });
+    }
+
     // GET /api/songs
     if (!id && req.method === 'GET') {
       const q = url.searchParams;

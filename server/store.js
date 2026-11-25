@@ -153,6 +153,14 @@ class Store {
     return { items: rows.map(r => this._public(r, clientId, userId)), total, page: current, pageSize: size };
   }
 
+  // One visible song per UTC day, the same for everyone. Ordering by id keeps the pick stable all day.
+  songOfTheDay(date = new Date(), clientId = '', userId = '') {
+    const rows = this.db.prepare(`SELECT s.*, ${LIKES} AS likes FROM songs s WHERE ${VISIBLE} ORDER BY s.id`).all();
+    if (!rows.length) return null;
+    const day = Math.floor(date.getTime() / 86_400_000);
+    return this._public(rows[day % rows.length], clientId, userId);
+  }
+
   _visibleRow(id) {
     return this.db.prepare(`SELECT s.*, ${LIKES} AS likes FROM songs s WHERE s.id = ? AND ${VISIBLE}`).get(id) || null;
   }
