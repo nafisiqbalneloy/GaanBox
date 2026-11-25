@@ -420,3 +420,8 @@ button.link-btn.danger { color: var(--danger); }
 .not-found-link { display: block; width: fit-content; margin: 0 auto; padding: var(--space-3) var(--space-5); border-radius: var(--radius-pill); background: var(--primary); color: var(--on-primary); font-weight: 600; text-decoration: none; }
 .not-found-link:hover { background: var(--primary-strong); }
 .not-found-link:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+/* Song of the day */
+.sotd { margin-top: var(--space-4); }
+.sotd h2 { font-size: 1rem; margin: 0 0 var(--space-2); color: var(--accent); }
+.sotd .song { border-left-color: var(--accent); }

@@ -14,7 +14,7 @@
   - [x] Sign-up / login UI and linking shared songs to accounts (#15)
 - [ ] 10. Playlists, tags/genres, comments, Song of the day
   - [x] Song of the day API (`GET /api/songs/of-the-day`) with tests
-  - [ ] Song of the day card in the UI
+  - [x] Song of the day card in the Community tab
 - [ ] 11. CI (GitHub Actions), Dockerfile, deployment guide, security pass
 - [ ] 12. Framework migration to React + Vite + TypeScript (needs `npm install` to work)
 - [ ] 13. Ongoing polish: performance, accessibility audit, docs with screenshots

@@ -55,7 +55,26 @@ export function initCommunity({ onSavedToMine, getUser = () => null } = {}) {
   async function reload() {
     page = 1;
     loaded = [];
+    loadSongOfTheDay();
     await loadPage();
+  }
+
+  let sotd = null;
+  function renderSongOfTheDay() {
+    if (!sotd) return;
+    $('c-sotd-body').replaceChildren(card(sotd));
+    $('c-sotd').hidden = false;
+  }
+
+  // One song picked per day by the server. Hidden quietly when there is none or the server is unreachable.
+  async function loadSongOfTheDay() {
+    try {
+      sotd = await api('/api/songs/of-the-day');
+      renderSongOfTheDay();
+    } catch (_) {
+      sotd = null;
+      $('c-sotd').hidden = true;
+    }
   }
 
   function showSkeletons(count = 3) {
@@ -97,6 +116,7 @@ export function initCommunity({ onSavedToMine, getUser = () => null } = {}) {
   function render() {
     const list = $('c-list');
     list.replaceChildren();
+    renderSongOfTheDay();
     $('c-status').textContent = total ? `${total} shared song${total === 1 ? '' : 's'}` : '';
     if (!loaded.length) {
       list.appendChild(el('p', { class: 'empty', text: 'Nothing here yet. Be the first to share a song 🎧' }));
