@@ -56,6 +56,7 @@ Covers validation, sharing/deleting, likes, search and pagination, reporting, ra
 | `POST /api/auth/login` | Sign in |
 | `POST /api/auth/logout` | Sign out |
 | `GET /api/auth/me` | Current user, or 401 |
+| `GET /api/songs/of-the-day` | One visible shared song per UTC day, the same for everyone (404 when nothing is shared yet) |
 | `GET /api/health` | Health check |
 
 How it stays safe: all input is validated and length-limited, only `http(s)` links are accepted, request bodies are capped at 10 KB, posting and liking are rate limited per IP, edit tokens and like/report identities are stored only as SHA-256 hashes, data is stored in SQLite (WAL mode, foreign keys, transactional import), only the page, stylesheet and the `src/*.js` modules are served, and a Content Security Policy is sent with every page.
@@ -100,4 +101,4 @@ Pages ship Open Graph / Twitter card tags with a 1200x630 preview image (`icons/
 ## 🔭 Ideas for next steps
 - Accounts and sign-in instead of browser-held tokens
 - Deploy it (for example on Render or Railway) so the Community tab is public
-- "Song of the day", comments, playlists and tags
+- A "Song of the day" card in the UI (the API endpoint already exists), comments, playlists and tags
