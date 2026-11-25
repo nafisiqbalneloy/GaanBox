@@ -324,3 +324,30 @@ test('existing databases gain the user_id column', () => {
   store.close();
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('song of the day: 404 when empty, stable per UTC day, rotates daily, skips hidden songs', async () => {
+  await withServer(async call => {
+    assert.equal((await call('/api/songs/of-the-day')).status, 404);
+    for (const name of ['A', 'B', 'C']) {
+      assert.equal((await call('/api/songs', { method: 'POST', body: song({ name }) })).status, 201);
+    }
+    const first = await (await call('/api/songs/of-the-day')).json();
+    const again = await (await call('/api/songs/of-the-day')).json();
+    assert.equal(first.id, again.id);
+    assert.equal('tokenHash' in first, false);
+  });
+
+  const store = new Store();
+  const ids = [];
+  for (const name of ['A', 'B', 'C']) ids.push((await store.create(song({ name }), null)).song.id);
+  const at = day => new Date(day * 86_400_000 + 3_600_000);
+  const base = Math.floor(Date.now() / 86_400_000);
+  const picks = [0, 1, 2].map(i => store.songOfTheDay(at(base + i)).id);
+  assert.deepEqual(new Set(picks), new Set(ids), 'three consecutive days cover all three songs');
+  assert.equal(store.songOfTheDay(at(base)).id, store.songOfTheDay(new Date((base + 1) * 86_400_000 - 1)).id,
+    'same UTC day, same song');
+  assert.equal(store.songOfTheDay(at(base + 3)).id, picks[0], 'cycle repeats after N days');
+
+  for (let i = 0; i < REPORT_LIMIT; i++) await store.report(picks[0], `reporter-${i}`);
+  for (let i = 0; i < 3; i++) assert.notEqual(store.songOfTheDay(at(base + i)).id, picks[0]);
+});
